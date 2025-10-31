@@ -1,0 +1,71 @@
+.btn {
+  width: 100%;
+  margin-top: 1rem;
+  border: none !important;
+}
+
+.add-btn {
+  background-color: #fe424d !important;
+}
+ 
+.form-control-cont {
+  width: 75% !important;
+  margin: 0 auto;
+}
+
+
+
+.imageHolder {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  width: 100%;
+}
+
+.hld {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 18rem;
+  max-height: 18rem;
+  cursor: pointer;
+  aspect-ratio: 1/1;
+}
+
+.hld-img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
+.labels {
+  display: flex !important;
+  align-items: center;
+  max-height: 18rem;
+  max-width: 18rem;
+  justify-content: center;
+  cursor: pointer;
+  aspect-ratio: 1/1;
+}
+
+.imgDiv {
+  max-height: 18rem;
+  max-width: 18rem;
+  background-size: cover;
+  aspect-ratio: 1/1;
+}
+
+
+
+@media only screen and (max-width: 990px) {
+  .form-control-cont {
+    width: 100% !important;
+    margin: 0 auto;
+  }
+  .imageHolder {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(calc(50% - 0.5rem), 1fr));
+    width: 100%;
+  }
+}
