@@ -2,7 +2,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
-const port = process.env.port || 5000;
+const port = 5000;
 const path = require("path");
 const multer = require("multer");
 require("dotenv").config();
@@ -11,7 +11,11 @@ const cors = require("cors");
 
 app.use(cors());
 app.use(express.json());
-
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 // User Schema
 const userSchema = new mongoose.Schema({
   name: String,
@@ -33,7 +37,7 @@ app.post("/signUp", async (req, res) => {
     location: location,
   });
   await newUser.save();
-  /* res.redirect("http://localhost:5173/"); */
+  res.redirect(`http://localhost:5173/`); 
 });
 
 app.get("/userDetails", async (req, res) => {
@@ -49,11 +53,7 @@ app.get("/userDetails", async (req, res) => {
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Connect to MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/hindZon", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+
 
 const DataSchema = new mongoose.Schema({
   title: {
@@ -68,41 +68,66 @@ const DataSchema = new mongoose.Schema({
     location: String,
   },
   emails: String,
+  old: String,
 });
 const Data = mongoose.model("Listing", DataSchema);
 
 const ImageSchema = new mongoose.Schema({
-  name: String,
-  path: String,
+  data: Buffer,
+  type: String,
   productId: String,
 });
 const Images = mongoose.model("Image", ImageSchema);
 
 // API endpoint to get data
+
 app.get("/products", async (req, res) => {
   try {
-    const allData = await Data.find();
-    const allImg = await Images.find();
-    res.json({
-      details: allData,
-      images: allImg,
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const skip = page * limit;
+
+    const allData = await Data.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    var arr = allData;
+
+    const total = await Data.countDocuments();
+    console.log(total,skip)
+    const hasMore = skip + limit < total;
+
+    var allImg = [];
+
+    for (let i = 0; i < arr.length; i++) {
+      let newArr = await Images.find({ productId: arr[i]._id }).limit(1);
+      allImg.push(newArr);
+    }
+
+    const flattenedArray = allImg.flat();
+
+    const convertedImg = flattenedArray.map((img) => {
+      return {
+        type: img.type,
+        data: img.data.toString("base64"),
+        productID: img.productId,
+      };
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    res.json({ details: allData, images: convertedImg, hasMore });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Multer setup for file uploads (in memory)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fieldSize: 10 * 1024 * 1024,
   },
 });
-const upload = multer({ storage });
-
 app.post("/upload", upload.array("image", 10), async (req, res) => {
   const newData = new Data({
     title: req.body.title,
@@ -114,24 +139,135 @@ app.post("/upload", upload.array("image", 10), async (req, res) => {
       mob: req.body.mob,
       location: req.body.location,
     },
-    emails:req.body.email
+    emails: req.body.email,
+    old: req.body.old,
   });
   const data = await newData.save();
   const productID = data._id.toString();
 
   const ImgData = req.files;
 
-  if (!ImgData) return res.status(400).json({ message: "No file Uploaded!" });
+  try {
+    for (let index = 0; index < ImgData.length; index++) {
+      const newImage = new Images({
+        data: ImgData[index].buffer,
+        type: ImgData[index].mimetype,
+        productId: productID,
+      });
+      await newImage.save();
+    }
 
-  for (let index = 0; index < ImgData.length; index++) {
-    const newImage = new Images({
-      name: ImgData[index].originalname,
-      path: ImgData[index].filename,
-      productId: productID,
-    });
-    await newImage.save();
+    res.status(201).send("Image uploaded sucessfully");
+  } catch (err) {
+    res.status(500).send(err.message);
   }
-  /* res.redirect("http://localhost:5173/"); */
+});
+
+//Edit Product
+app.post("/edit/:id", upload.array("image", 10), async (req, res) => {
+  try {
+    const productId = req.params.id;
+    // Check if product exists
+    const existingProduct = await Data.findById(productId);
+    if (!existingProduct) {
+      return res.status(404).send("Product not found");
+    }
+
+    // Parse owner data if it's sent as JSON string
+    let ownerData;
+    if (typeof req.body.owner === "string") {
+      ownerData = JSON.parse(req.body.owner);
+    } else {
+      ownerData = {
+        Username: req.body.name,
+        mob: req.body.mob,
+        location: req.body.location,
+      };
+    }
+
+    // Update product data
+    const updateData = {
+      title: req.body.title,
+      description: req.body.description || req.body.desc,
+      price: req.body.price,
+      Category: req.body.Category || req.body.cat,
+      owner: ownerData,
+      emails: req.body.email || ownerData.emails,
+      old: req.body.old,
+    };
+
+    // Update the product
+    const updatedProduct = await Data.findByIdAndUpdate(productId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    // Handle existing images
+    let existingImageIds = [];
+    if (req.body.existingImages) {
+      try {
+        existingImageIds = JSON.parse(req.body.existingImages);
+      } catch (err) {
+        console.error("Error parsing existingImages:", err);
+      }
+    }
+
+    // Get all current images for this product
+    const currentImages = await Images.find({ productId: productId });
+
+    // Delete images that are not in the existingImages array
+    for (const img of currentImages) {
+      const imgId = img._id.toString();
+      if (!existingImageIds.includes(imgId)) {
+        await Images.findByIdAndDelete(imgId);
+      }
+    }
+
+    // Add new images if any
+    const newImages = req.files;
+    if (newImages && newImages.length > 0) {
+      for (let index = 0; index < newImages.length; index++) {
+        const newImage = new Images({
+          data: newImages[index].buffer,
+          type: newImages[index].mimetype,
+          productId: productId,
+        });
+        await newImage.save();
+      }
+    }
+
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).send(err.message);
+  }
+});
+
+// DELETE
+app.post("/delete/:id", async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // Delete product
+    const deletedProduct = await Data.findByIdAndDelete(productId);
+    if (!deletedProduct) {
+      return res.status(404).send("Product not found");
+    }
+
+    // Delete associated images
+    await Images.deleteMany({ productId: productId });
+
+    res.status(200).json({
+      message: "Product deleted successfully",
+      product: deletedProduct,
+    });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).send(err.message);
+  }
 });
 
 //Show Route
@@ -141,16 +277,32 @@ app.get("/products/:id", async (req, res) => {
   if (myArray.includes(id)) {
     const allProduct = await Data.find({ Category: id });
     const image = await Images.find({});
+    const convertedImg = image.map((img) => {
+      return {
+        type: img.type,
+        data: img.data.toString("base64"),
+        productID: img.productId,
+        id: img._id,
+      };
+    });
     res.json({
       allProduct: allProduct,
-      image: image,
+      image: convertedImg,
     });
   } else {
     const product = await Data.find({ _id: id }); //or Listing.findById(id)
     const images = await Images.find({ productId: id });
+    const convertedImg = images.map((img) => {
+      return {
+        type: img.type,
+        data: img.data.toString("base64"),
+        productID: img.productId,
+        id: img._id,
+      };
+    });
     res.json({
       product: product,
-      images: images,
+      images: convertedImg,
     });
   }
 });

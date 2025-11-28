@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Home, LogIn } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
@@ -12,7 +11,9 @@ export default function LoginForm() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/userDetails");
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/userDetails`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -23,13 +24,16 @@ export default function LoginForm() {
         const olduser = fetchedData.details.filter(
           (emails) => emails.email == mail.userDetails.email
         );
-        if (olduser.length !=0) {
-          localStorage.setItem("user", JSON.stringify({
-          userDetails: mail.userDetails,
-          status: true,
-        }));
+        if (olduser.length != 0) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              userDetails: mail.userDetails,
+              status: true,
+            })
+          );
         }
-        
+
         setUser(olduser);
         setUserDet(olduser);
       }
@@ -53,7 +57,9 @@ export default function LoginForm() {
         "user",
         JSON.stringify({ userDetails: userInfo, status: false })
       );
-      const response = await fetch("http://localhost:5000/userDetails");
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/userDetails`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -128,7 +134,7 @@ export default function LoginForm() {
       ) : userDet.length == 0 ? (
         <UserDetailsForm></UserDetailsForm>
       ) : (
-        (window.location.href = "http://localhost:5173/")
+        (window.location.href = `${import.meta.env.VITE_CLIENT_URL}/`)
       )}
     </>
   );

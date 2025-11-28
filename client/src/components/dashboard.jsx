@@ -1,6 +1,3 @@
-import React from "react";
-import Profile from "./profile";
-
 const AccountDashboard = () => {
   const accountCards = [
     {
@@ -64,9 +61,18 @@ const AccountDashboard = () => {
     },
   ];
 
-  const open = (loc)=>{
-    window.location.href = `http://localhost:5173/${loc}`;
-  }
+  const open = (loc) => {
+    window.location.href = `${import.meta.env.VITE_CLIENT_URL}/${loc}`;
+  };
+
+  const logout = () => {
+    if (localStorage.getItem("user")) {
+      localStorage.clear();
+      window.location.reload();
+      window.location.href = `${import.meta.env.VITE_CLIENT_URL}/`;
+    }
+    alert("Logging out...");
+  };
   return (
     <>
       <style>{`
@@ -320,11 +326,7 @@ const AccountDashboard = () => {
           }
         }
       `}</style>
-      <div className="header">
-        <div className="header-top">
-          <div className="logo">LocalBazar</div>
-        </div>
-      </div>
+      <br />
       <div className="account-dashboard">
         <h1 className="dashboard-title">Your Account</h1>
         <div className="cards-grid">
@@ -332,7 +334,7 @@ const AccountDashboard = () => {
             <div
               key={index}
               className={`account-card ${card.wide ? "card-wide" : ""}`}
-              onClick={()=>open(card.open)}
+              onClick={() => open(card.open)}
             >
               <div className="card-content">
                 {card.icon}
@@ -346,10 +348,7 @@ const AccountDashboard = () => {
         </div>
 
         <div className="logout-container">
-          <button
-            className="logout-button"
-            onClick={() => alert("Logging out...")}
-          >
+          <button className="logout-button" onClick={logout}>
             <svg
               viewBox="0 0 24 24"
               className="logout-icon"

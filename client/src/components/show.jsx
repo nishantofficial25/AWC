@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import "../styles/show.css";
+import { Spinner, SkeletonCard } from "./loader";
+import "../styles/loader.css";
 import { useParams } from "react-router-dom";
+import Overview from "./overview";
 
 function Show() {
   const { id } = useParams();
@@ -19,28 +22,28 @@ function Show() {
     ];
 
     if (arr.includes(id)) {
-      window.location.href = "http://localhost:5173/products";
-    }
-    else{
+      window.location.href = `${import.meta.env.VITE_SERVER_URL}/products`;
+    } else {
       const fetchData = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/products/${id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_SERVER_URL}/products/${id}`
+          );
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const fetchedData = await response.json();
+          setData(fetchedData.product);
+          setImage(fetchedData.images);
+        } catch (error) {
+          setError(error);
+        } finally {
+          setLoading(false);
         }
-        const fetchedData = await response.json();
-        setData(fetchedData.product);
-        setImage(fetchedData.images);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+      };
+      fetchData();
     }
   }, []);
-
 
   const change = (index) => {
     const thumbnails = document.querySelectorAll(".thumbnail");
@@ -53,25 +56,22 @@ function Show() {
     setTimeout(() => {
       mainImage.setAttribute(
         "src",
-        `http://localhost:5000/uploads/${images[index].path}`
+        `data:${images[index].type};base64,${images[index].data}`
       );
       mainImage.style.opacity = "1";
     }, 200);
   };
 
-  if (loading) return <p>Loading data...</p>;
+  if (loading)
+    return (
+      <div className="app-container">
+        <SkeletonCard />
+      </div>
+    );
   if (error) return <p>Error: {error.message}</p>;
 
   return (
     <>
-      {/*
-        {data[0].title}
-        {data[0].description}
-        &#8377;{data[0].price.toLocaleString("en-IN")}
-        {data[0].owner.Username}
-        {data[0].owner.mob}
-        {data[0].owner.location}
-      */}
 
       {/* <!-- Main Container --> */}
       <div className="container">
@@ -80,7 +80,7 @@ function Show() {
           <div className="image-gallery">
             <div className="main-image" id="mainImage">
               <img
-                src={`http://localhost:5000/uploads/${images[0].path}`}
+                src={`data:${images[0].type};base64,${images[0].data}`}
                 alt=""
                 id="mainImageSvg"
               />
@@ -96,7 +96,7 @@ function Show() {
                     id={`${index}`}
                   >
                     <img
-                      src={`http://localhost:5000/uploads/${item.path}`}
+                      src={`data:${item.type};base64,${item.data}`}
                       alt="Someimage"
                     />
                   </div>
@@ -108,15 +108,15 @@ function Show() {
           {/* <!-- Product Info --> */}
           <div className="product-info">
             <h1 className="product-title">{data[0].title}</h1>
-
-            <div className="bought-info">{data[0].description}</div>
-
             <div className="price-section">
               <span className="price">
                 <span className="currency"></span>₹
                 {data[0].price.toLocaleString("en-IN")}
               </span>
             </div>
+            <div className="bought-info">{data[0].description}</div>
+
+            <Overview data={data}></Overview>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, User, Mail, Phone, Check,Save, MapIcon } from "lucide-react";
+import { Camera, User, Mail, Phone, Check, Save, MapIcon } from "lucide-react";
 import "../styles/userDetails.css";
 import axios from "axios";
 
@@ -9,7 +9,7 @@ export default function UserDetailsForm() {
     email: JSON.parse(localStorage.getItem("user")).userDetails.email,
     mobile: "",
     profileImage: JSON.parse(localStorage.getItem("user")).userDetails.picture,
-    location:""
+    location: "",
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
@@ -86,7 +86,7 @@ export default function UserDetailsForm() {
   const handleSubmit = () => {
     if (validateForm()) {
       setSubmitted(true);
-      
+
       setTimeout(() => {
         setSubmitted(false);
         setFormData({
@@ -94,7 +94,7 @@ export default function UserDetailsForm() {
           email: "",
           mobile: "",
           profileImage: null,
-          location:""
+          location: "",
         });
         setImagePreview(null);
       }, 2000);
@@ -102,24 +102,28 @@ export default function UserDetailsForm() {
     }
   };
 
-  const changeId = ()=>{
+  const changeId = () => {
     if (localStorage.getItem("user")) {
       localStorage.clear();
       window.location.reload();
     }
-  }
+  };
 
   const UploadData = async () => {
-    const res = await axios.post("http://localhost:5000/signUp",formData)
+    console.log("yess");
+
+    try {
+      await axios.post(`${import.meta.env.VITE_SERVER_URL}/signUp`, formData);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      window.location.reload();
+    }
   };
 
   return (
     <>
-      <div className="header">
-        <div className="header-top">
-          <div className="logo">LocalBazar</div>
-        </div>
-      </div>
+      
       <div className="user-form-container">
         <div className="user-form-card">
           <div className="form-decoration-1"></div>

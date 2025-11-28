@@ -11,15 +11,21 @@
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
+    "@tanstack/react-query": "^5.90.6",
     "@types/jwt-decode": "^2.2.1",
     "axios": "^1.12.2",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^4.1.0",
     "expo-jwt": "^1.8.2",
+    "j": "^1.0.0",
+    "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.546.0",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.4"
+    "react-router-dom": "^7.9.4",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

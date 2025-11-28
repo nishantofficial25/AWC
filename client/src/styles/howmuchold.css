@@ -1,0 +1,127 @@
+.calendar {
+  padding: 0.75rem;
+  pointer-events: auto;
+}
+
+.calendar-months {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.calendar-month {
+  width: 100%;
+}
+
+.calendar-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+}
+
+.calendar-caption-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.calendar-nav-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--color-foreground);
+}
+
+.calendar-nav-button:hover:not(:disabled) {
+  background-color: var(--color-muted);
+}
+
+.calendar-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-head-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-head-cell {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-muted-foreground);
+  padding: var(--spacing-sm);
+}
+
+.calendar-body {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.calendar-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.calendar-cell {
+  text-align: center;
+  position: relative;
+}
+
+.calendar-day {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--color-foreground);
+}
+
+.calendar-day:hover:not(:disabled) {
+  background-color: var(--color-muted);
+}
+
+.calendar-day-selected {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.calendar-day-today {
+  border: 1px solid var(--color-primary);
+}
+
+.calendar-day-outside {
+  color: var(--color-muted-foreground);
+  opacity: 0.5;
+}
+
+.calendar-day:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

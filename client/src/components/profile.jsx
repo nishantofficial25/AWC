@@ -15,12 +15,20 @@ export default function Profile() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/userDetails");
+        const response = await fetch(
+          `${import.meta.env.VITE_SERVER_URL}/userDetails`
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const fetchedData = await response.json();
-        updateFields(fetchedData.details[0]);
+        const newData = fetchedData.details.filter(
+          (datas) =>
+            datas.email ==
+            JSON.parse(localStorage.getItem("user")).userDetails.email
+        );
+        updateFields(newData[0]);
+        /* updateFields(fetchedData.details[0]); */
       } catch (error) {
         console.log(error);
       }
@@ -51,17 +59,13 @@ export default function Profile() {
     if (localStorage.getItem("user")) {
       localStorage.clear();
       window.location.reload();
-      window.location.href = "http://localhost:5173/";
+      window.location.href = `${import.meta.env.VITE_CLIENT_URL}/`;
     }
   };
 
   return (
     <>
-      <div className="header">
-        <div className="header-top">
-          <div className="logo">LocalBazar</div>
-        </div>
-      </div>
+      
       <div className="user-form-container">
         <div className="user-form-card">
           <div className="form-decoration-1"></div>
